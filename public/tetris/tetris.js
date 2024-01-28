@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const score = document.getElementById("score");
       score.innerText = `Game Over! Score: ${score}`;
 
-      reset();
+      setTimeout(reset, 2000);
     }
   }
 
