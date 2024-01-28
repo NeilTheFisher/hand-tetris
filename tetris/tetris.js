@@ -327,12 +327,16 @@ document.addEventListener('DOMContentLoaded', () => {  // Ensures the DOM is ful
     ];
 
     function drawBoard() {
-        tetrisBoard.childNodes.forEach((cell, index) => {
-            const x = index % boardWidth;
-            const y = Math.floor(index / boardWidth);
-            cell.style.backgroundColor = board[y][x] || 'transparent';
-        });
+        for (let y = 0; y < boardHeight; y++) {
+            for (let x = 0; x < boardWidth; x++) {
+                const cellIndex = y * boardWidth + x; // Calculate the cell's index
+                const cell = tetrisBoard.children[cellIndex];
+                cell.style.backgroundColor = board[y][x] || 'transparent'; // Set color if cell is filled
+            }
+        }
     }
+    
+    
 
     function drawTetromino() {
         currentTetromino.shape.forEach((row, dy) => {
@@ -422,15 +426,24 @@ document.addEventListener('DOMContentLoaded', () => {  // Ensures the DOM is ful
         currentTetromino.shape.forEach((row, dy) => {
             row.forEach((value, dx) => {
                 if (value) {
-                    const x = currentPosition.x + dx;
-                    const y = currentPosition.y + dy;
-                    board[y][x] = currentTetromino.color;
+                    const x = currentPosition.x + dx; // Calculate the absolute X position on the board
+                    const y = currentPosition.y + dy; // Calculate the absolute Y position on the board
+    
+                    // Check if the position is within the board's bounds
+                    if (x >= 0 && x < boardWidth && y >= 0 && y < boardHeight) {
+                        board[y][x] = currentTetromino.color; // Update the board with the tetromino's color
+                    }
                 }
             });
         });
-        clearLines();
-        spawnTetromino();
+    
+        clearLines(); // Check for and clear any completed lines
+        spawnTetromino(); // Spawn a new tetromino for the next turn
     }
+    
+    
+    
+    
 
     function clearLines() {
         let linesCleared = 0;
@@ -453,15 +466,18 @@ document.addEventListener('DOMContentLoaded', () => {  // Ensures the DOM is ful
 
     function moveTetrominoDown() {
         if (!gameRunning) return;
-        clearTetromino();
-        if (!checkCollision(0, 1)) {
-            currentPosition.y++;
+        clearTetromino(); // Clear the current tetromino's position
+        currentPosition.y++; // Move the tetromino down
+    
+        if (checkCollision(0, 0)) { // Check for collision at the new position
+            currentPosition.y--; // Revert the move if there's a collision
+            lockTetromino(); // Lock the tetromino in place
+            drawBoard(); // <-- Make sure to call drawBoard here to render locked pieces
         } else {
-            lockTetromino();
+            drawTetromino(); // Draw the tetromino at its new position if no collision
         }
-        drawTetromino();
     }
-
+    
     function control(e) {
         if (!gameRunning) return;
         if (e.keyCode === 37) { // Left arrow
