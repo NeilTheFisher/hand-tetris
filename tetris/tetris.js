@@ -367,6 +367,7 @@ document.addEventListener('DOMContentLoaded', () => {  // Ensures the DOM is ful
             });
         });
     }
+    
 
     function rotateTetromino() {
         const originalShape = currentTetromino.shape;

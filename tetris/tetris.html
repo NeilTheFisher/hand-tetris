@@ -11,7 +11,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: transparent;
             margin: 0;
         }
         #tetris-board {
@@ -19,7 +19,7 @@
             grid-template-rows: repeat(20, 30px);
             grid-template-columns: repeat(10, 30px);
             gap: 2px;
-            background-color: #333;
+            background-color: transparent; /* Make the Tetris board background transparent */
             padding: 10px;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
@@ -27,8 +27,9 @@
         .tetris-cell {
             width: 30px;
             height: 30px;
-            background-color: #eee;
+            background-color: transparent; /* Consider making cells transparent or adjusting as needed */
             border-radius: 3px;
+            outline: 2px solid #333;
         }
         #score {
             font-size: 1.5em;
@@ -54,6 +55,7 @@
             font-size: 1.5em;
         }
     </style>
+    
 </head>
 <body>
     <div>
