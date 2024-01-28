@@ -79,42 +79,74 @@
 
 // export default App;
 
-
 import { useRef, useState } from "react";
+import FlappyBirdGame, { FlappyBirdGameApi } from "./components/FlappyBirdGame"; // Import FlappyBirdGame
 import HandsContainer from "./components/HandsContainer";
 import TetrisWrapper, { TetrisApi } from "./components/TetrisWrapper";
-import FlappyBirdGame from "./components/FlappyBirdGame"; // Import FlappyBirdGame
-import ShooterGame from './components/shooter';
 
 const App = () => {
-  const tetrisRef = useRef<TetrisApi>(null!);
-  const [currentGame, setCurrentGame] = useState<"Tetris" | "FlappyBird" | "ShooterGame">("Tetris"); // Added ShooterGame to the game state type
+  const tetrisRef = useRef<TetrisApi>(null);
+  const flappyBirdRef = useRef<FlappyBirdGameApi>(null);
+  // const shoorterGameRef = useRef<ShooterGameApi>(null);
+  const [currentGame, setCurrentGame] = useState<
+    "Tetris" | "FlappyBird" | "ShooterGame"
+  >("Tetris"); // Added ShooterGame to the game state type
 
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "column", // Maintain column layout for better control
-        alignItems: "center", // Center-align items to fix the issue of content being too far left
-        justifyContent: "center", // Vertically center the content in the viewport
-        height: "100vh", // Use 100% of the viewport height
-        width: "100vw", // Use 100% of the viewport width
-        gap: "20px", // Adjust the gap between buttons and the game component as needed
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        width: "100vw",
+        gap: "20px",
+        overflow: "hidden",
       }}
     >
-      <div>
+      <div
+        style={{
+          height: "40px",
+          marginTop: "1em",
+          gap: "0.5em",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <button onClick={() => setCurrentGame("Tetris")}>Play Tetris</button>
-        <button onClick={() => setCurrentGame("FlappyBird")}>Play Flappy Bird</button>
-        <button onClick={() => setCurrentGame("ShooterGame")}>Shooter Game</button>
+        <button onClick={() => setCurrentGame("FlappyBird")}>
+          Play Flappy Bird
+        </button>
+        {/* <button onClick={() => setCurrentGame("ShooterGame")}>
+          Shooter Game
+        </button> */}
       </div>
-      {currentGame === "Tetris" && (
-        <>
-          <HandsContainer tetris={tetrisRef} />
-          <TetrisWrapper ref={tetrisRef} />
-        </>
-      )}
-      {currentGame === "FlappyBird" && <FlappyBirdGame />}
-      {currentGame === "ShooterGame" && <ShooterGame />}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "calc(100% - 40px - 20px)",
+          width: "100%",
+          gap: "20px",
+        }}
+      >
+        {currentGame === "Tetris" && (
+          <>
+            <HandsContainer tetris={tetrisRef} />
+            <TetrisWrapper ref={tetrisRef} />
+          </>
+        )}
+        {currentGame === "FlappyBird" && (
+          <>
+            <HandsContainer flappyBird={flappyBirdRef} />
+            <FlappyBirdGame ref={flappyBirdRef} />
+          </>
+        )}
+        {/* {currentGame === "ShooterGame" && <ShooterGame />}   */}
+      </div>
     </div>
   );
 };

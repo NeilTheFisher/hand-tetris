@@ -1,15 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { clamp } from "@mediapipe/drawing_utils";
 import {
   DrawingUtils,
   FilesetResolver,
   GestureRecognizer,
 } from "@mediapipe/tasks-vision";
+import { useEffect, useRef, useState } from "react";
+import { FlappyBirdGameApi } from "./FlappyBirdGame";
 import { TetrisApi } from "./TetrisWrapper";
 
 function useHands(
   inputVideoRef: React.RefObject<HTMLVideoElement>,
   canvasRef: React.RefObject<HTMLCanvasElement>,
-  tetris: React.MutableRefObject<TetrisApi>
+  {
+    tetris,
+    flappyBird,
+  }: {
+    tetris?: React.RefObject<TetrisApi>;
+    flappyBird?: React.RefObject<FlappyBirdGameApi>;
+  }
 ) {
   const [loaded, setLoaded] = useState(false);
 
@@ -17,14 +25,19 @@ function useHands(
 
   const contextRef = useRef<CanvasRenderingContext2D>();
 
+  const loadedFlagRef = useRef(false);
+
   useEffect(() => {
     (async () => {
       if (!inputVideoRef.current || !canvasRef.current) return;
 
+      if (loadedFlagRef.current) return;
+      loadedFlagRef.current = true;
+
       contextRef.current = canvasRef.current.getContext("2d")!;
 
       const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.9/wasm"
       );
       gestureRecognizerRef.current = await GestureRecognizer.createFromOptions(
         vision,
@@ -42,8 +55,10 @@ function useHands(
 
       const stream = await window.navigator.mediaDevices.getUserMedia({
         video: {
-          height: 1280,
-          width: 720,
+          width: 640,
+          height: 480,
+          // width: 1280,
+          // height: 960,
         },
       });
       inputVideoRef.current.srcObject = stream;
@@ -68,37 +83,50 @@ function useHands(
         if (result.gestures[0]) {
           for (const category of result.gestures[0]) {
             if (category.categoryName === "Closed_Fist") {
-              tetris.current.moveDown();
+              if (tetris?.current) {
+                tetris.current.moveDown();
+              }
             }
           }
         }
         // for (const multiHandLandmarks of result.landmarks) {
+        if (result.landmarks.length === 0) {
+          contextRef.current!.clearRect(
+            0,
+            0,
+            canvasRef.current!.width,
+            canvasRef.current!.height
+          );
+
+          requestAnimationFrame(getGesture);
+          return;
+        }
         for (let i = 0; i < result.landmarks.length; i++) {
           const multiHandLandmarks = result.landmarks[i];
           // set index finger
           const indexFingerLandmark = multiHandLandmarks[8];
-          if (
-            indexFingerLandmark.x > 1 ||
-            indexFingerLandmark.x < 0 ||
-            indexFingerLandmark.y > 1 ||
-            indexFingerLandmark.y < 0
-          ) {
-            break;
-          }
 
           if (indexFingerLandmark) {
-            if (indexFingerLandmark.x < 0.3) {
-              tetris.current.moveRight(); // camera is flipped
-            } else if (indexFingerLandmark.x > 0.7) {
-              tetris.current.moveLeft(); // camera is flipped
-            } else if (indexFingerLandmark.y < 0.3) {
-              tetris.current.rotate();
+            const x = clamp(indexFingerLandmark.x, 0, 1);
+            const y = clamp(indexFingerLandmark.y, 0, 1);
+            if (tetris?.current) {
+              if (x < 0.3) {
+                tetris.current.moveRight(); // camera is flipped
+              } else if (x > 0.7) {
+                tetris.current.moveLeft(); // camera is flipped
+              } else if (y < 0.3) {
+                tetris.current.rotate();
+              }
+            } else if (flappyBird?.current) {
+              if (y < 0.3) {
+                flappyBird.current.flapUp();
+              } else {
+                flappyBird.current.flapDown();
+              }
             }
           }
 
           {
-            const isRightHand = i === 0;
-
             contextRef.current!.save();
             contextRef.current!.clearRect(
               0,
@@ -114,13 +142,13 @@ function useHands(
               multiHandLandmarks,
               GestureRecognizer.HAND_CONNECTIONS,
               {
-                color: isRightHand ? "#00FF00" : "#FF0000",
+                color: "#00FFBB",
                 lineWidth: 2,
               }
             );
             drawingUtils.drawLandmarks(multiHandLandmarks, {
               lineWidth: 2,
-              color: isRightHand ? "#00FF00" : "#FF0000",
+              color: "#00FFBB",
               // fillColor: isRightHand ? "#FF0000" : "#00FF00",
               // radius: (data) => lerp(data.from!.z!, -0.15, 0.1, 10, 1),
             });
@@ -135,20 +163,26 @@ function useHands(
         getGesture();
       });
     })();
-  }, []);
+
+    return () => {
+      gestureRecognizerRef.current?.close();
+    };
+  }, [tetris, flappyBird]);
 
   return { loaded };
 }
 
 const HandsContainer = ({
   tetris,
+  flappyBird,
 }: {
-  tetris: React.MutableRefObject<TetrisApi>;
+  tetris?: React.RefObject<TetrisApi>;
+  flappyBird?: React.RefObject<FlappyBirdGameApi>;
 }) => {
   const inputVideoRef = useRef<HTMLVideoElement>(null!);
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
-  const { loaded } = useHands(inputVideoRef, canvasRef, tetris);
+  const { loaded } = useHands(inputVideoRef, canvasRef, { tetris, flappyBird });
 
   return (
     <div
@@ -164,6 +198,7 @@ const HandsContainer = ({
           position: "relative",
           overflow: "hidden",
           transform: "scaleX(-1)",
+          lineHeight: "0",
         }}
       >
         <video autoPlay playsInline ref={inputVideoRef} />
