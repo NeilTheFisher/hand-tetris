@@ -364,6 +364,34 @@ document.addEventListener('DOMContentLoaded', () => {  // Ensures the DOM is ful
         });
     }
 
+    function rotateTetromino() {
+        const originalShape = currentTetromino.shape;
+        const N = originalShape.length;
+        const M = originalShape[0].length; // Assuming rectangular shapes
+        const rotatedShape = [];
+    
+        // Create a new rotated shape matrix
+        for (let x = 0; x < M; x++) {
+            rotatedShape.push([]);
+            for (let y = N - 1; y >= 0; y--) {
+                rotatedShape[x].push(originalShape[y][x]);
+            }
+        }
+    
+        // Save the original position to revert if needed
+        const originalPosition = { ...currentPosition };
+    
+        // Apply the rotated shape and check for collisions
+        clearTetromino();
+        currentTetromino.shape = rotatedShape;
+        if (checkCollision(0, 0) || checkCollision(-1, 0) || checkCollision(1, 0)) {
+            // Revert to original shape and position if there's a collision
+            currentTetromino.shape = originalShape;
+            currentPosition = originalPosition;
+        }
+        drawTetromino();
+    }
+        
     function spawnTetromino() {
         currentTetromino = JSON.parse(JSON.stringify(tetrominoes[Math.floor(Math.random() * tetrominoes.length)]));
         currentPosition = { x: Math.floor(boardWidth / 2) - 1, y: 0 };
@@ -450,6 +478,8 @@ document.addEventListener('DOMContentLoaded', () => {  // Ensures the DOM is ful
             }
         } else if (e.keyCode === 40) { // Down arrow
             moveTetrominoDown();
+        } else if (e.keyCode === 38) { // Up arrow for rotation
+            rotateTetromino();
         }
     }
 
