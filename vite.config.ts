@@ -5,4 +5,7 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ["@mediapipe/tasks-vision/wasm/*"],
+  server: {
+    hmr: false,
+  },
 });

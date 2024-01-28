@@ -8,6 +8,8 @@ function useHands(inputVideoRef: React.RefObject<HTMLVideoElement>) {
   const [indexFingerLandmark, setIndexFingerLandmark] =
     useState<NormalizedLandmark>();
 
+  const [closedFist, setClosedFist] = useState(false);
+
   const [loaded, setLoaded] = useState(false);
 
   const gestureRecognizerRef = useRef<GestureRecognizer>();
@@ -51,9 +53,12 @@ function useHands(inputVideoRef: React.RefObject<HTMLVideoElement>) {
 
         if (result.gestures[0]) {
           for (const category of result.gestures[0]) {
-            console.log(category.categoryName);
-            // if (category.categoryName === "Closed_Fist") {
-            // }
+            if (category.categoryName === "Closed_Fist") {
+              console.log("closed fist");
+              setClosedFist(true);
+            } else {
+              setClosedFist(false);
+            }
           }
         }
         for (const multiHandLandmarks of result.landmarks) {
@@ -89,7 +94,7 @@ function useHands(inputVideoRef: React.RefObject<HTMLVideoElement>) {
     })();
   }, []);
 
-  return { indexFingerLandmark, loaded };
+  return { indexFingerLandmark, loaded, closedFist };
 }
 
 const HandsContainer = ({
@@ -99,7 +104,25 @@ const HandsContainer = ({
 }) => {
   const inputVideoRef = useRef<HTMLVideoElement>(null!);
 
-  const { loaded, indexFingerLandmark } = useHands(inputVideoRef);
+  const { loaded, indexFingerLandmark, closedFist } = useHands(inputVideoRef);
+
+  const rotationTimeoutRef = useRef<number>();
+
+  useEffect(() => {
+    // split the index finger into 10 parts
+    if (closedFist) {
+      tetris.current.moveDown();
+      console.log("moving down");
+    } else if (indexFingerLandmark) {
+      if (indexFingerLandmark.x < 0.3) {
+        tetris.current.moveRight(); // camera is flipped
+      } else if (indexFingerLandmark.x > 0.7) {
+        tetris.current.moveLeft(); // camera is flipped
+      } else if (indexFingerLandmark.y < 0.3) {
+        tetris.current.rotate();
+      }
+    }
+  }, [indexFingerLandmark, closedFist]);
 
   return (
     <div
@@ -114,6 +137,7 @@ const HandsContainer = ({
         style={{
           position: "relative",
           overflow: "hidden",
+          transform: "scaleX(-1)",
         }}
       >
         {indexFingerLandmark && (
@@ -138,13 +162,13 @@ const HandsContainer = ({
           ref={inputVideoRef}
         />
         {/* <canvas ref={canvasRef} /> */}
-        {!loaded && (
-          <div style={{}}>
-            <div style={{}}></div>
-            <div style={{}}>Loading</div>
-          </div>
-        )}
       </div>
+      {!loaded && (
+        <div style={{}}>
+          <div style={{}}></div>
+          <div style={{}}>Loading</div>
+        </div>
+      )}
     </div>
   );
 };

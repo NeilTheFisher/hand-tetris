@@ -56,16 +56,16 @@ const TetrisWrapper = forwardRef<TetrisApi>((_props, ref) => {
 
   useImperativeHandle(ref, () => ({
     moveRight: () => {
-      iframeRef.current.contentWindow?.dispatchEvent(rightKeyEvent);
+      iframeRef.current.contentWindow!.document.dispatchEvent(rightKeyEvent);
     },
     moveLeft: () => {
-      iframeRef.current.contentWindow?.dispatchEvent(leftKeyEvent);
+      iframeRef.current.contentWindow!.document.dispatchEvent(leftKeyEvent);
     },
     moveDown: () => {
-      iframeRef.current.contentWindow?.dispatchEvent(downKeyEvent);
+      iframeRef.current.contentWindow!.document.dispatchEvent(downKeyEvent);
     },
     rotate: () => {
-      iframeRef.current.contentWindow?.dispatchEvent(upKeyEvent);
+      iframeRef.current.contentWindow!.document.dispatchEvent(upKeyEvent);
     },
   }));
 
@@ -73,13 +73,13 @@ const TetrisWrapper = forwardRef<TetrisApi>((_props, ref) => {
     <iframe
       ref={iframeRef}
       title="tetris"
-      allowTransparency
       allowFullScreen={false}
       src="/tetris/tetris.html"
       style={{
         width: "100%",
         height: "100%",
         border: "none",
+        background: "transparent",
       }}
     ></iframe>
   );
