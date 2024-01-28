@@ -36,7 +36,34 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
       color: "purple",
     }, // T
-    // Add other Tetrominoes here
+    {
+      shape: [
+        [1, 1, 0],
+        [0, 1, 1],
+      ],
+      color: "green",
+    },
+    {
+      shape: [
+        [0, 1, 1],
+        [1, 1, 0],
+      ],
+      color: "red",
+    },
+    {
+      shape: [
+        [1, 1, 1],
+        [0, 0, 1],
+      ],
+      color: "blue",
+    },
+    {
+      shape: [
+        [1, 1, 1],
+        [1, 0, 0],
+      ],
+      color: "orange",
+    },
   ];
 
   function drawBoard() {
@@ -47,6 +74,15 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.style.backgroundColor = board[y][x] || "transparent"; // Set color if cell is filled
       }
     }
+  }
+
+  function reset() {
+    // Reset the game state
+    gameRunning = true;
+    score = 0;
+    document.getElementById("score").innerText = `Score: ${score}`;
+    board.forEach((row) => row.fill(""));
+    drawBoard();
   }
 
   function drawTetromino() {
@@ -118,8 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
     currentRotation = 0;
     if (checkCollision()) {
       gameRunning = false;
-      alert("Game Over");
-      // Optionally, implement game reset or high score logic here
+
+      // show game over
+      // const gameOver = document.getElementById("game-over");
+      const score = document.getElementById("score");
+      score.innerText = `Game Over! Score: ${score}`;
+
+      reset();
     }
   }
 
