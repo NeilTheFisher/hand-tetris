@@ -1,4 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef } from "react";
+import { debounce } from "../utils/debounce";
 
 const upKeyEvent = new KeyboardEvent("keydown", {
   key: "ArrowUp",
@@ -55,18 +56,18 @@ const TetrisWrapper = forwardRef<TetrisApi>((_props, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null!);
 
   useImperativeHandle(ref, () => ({
-    moveRight: () => {
+    moveRight: debounce(() => {
       iframeRef.current.contentWindow!.document.dispatchEvent(rightKeyEvent);
-    },
-    moveLeft: () => {
+    }, 0),
+    moveLeft: debounce(() => {
       iframeRef.current.contentWindow!.document.dispatchEvent(leftKeyEvent);
-    },
-    moveDown: () => {
+    }, 0),
+    moveDown: debounce(() => {
       iframeRef.current.contentWindow!.document.dispatchEvent(downKeyEvent);
-    },
-    rotate: () => {
+    }, 0),
+    rotate: debounce(() => {
       iframeRef.current.contentWindow!.document.dispatchEvent(upKeyEvent);
-    },
+    }, 10),
   }));
 
   return (

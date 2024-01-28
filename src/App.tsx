@@ -3,7 +3,7 @@ import HandsContainer from "./components/HandsContainer";
 import TetrisWrapper, { TetrisApi } from "./components/TetrisWrapper";
 
 export default function App() {
-  const tetris = useRef<TetrisApi>(null!);
+  const tetrisRef = useRef<TetrisApi>(null!);
 
   return (
     <div
@@ -16,8 +16,8 @@ export default function App() {
         gap: "40px",
       }}
     >
-      <HandsContainer tetris={tetris} />
-      <TetrisWrapper ref={tetris} />
+      <HandsContainer tetris={tetrisRef} />
+      <TetrisWrapper ref={tetrisRef} />
     </div>
   );
 }
