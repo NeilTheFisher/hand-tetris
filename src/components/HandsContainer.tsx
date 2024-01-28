@@ -4,7 +4,6 @@ import {
   FilesetResolver,
   GestureRecognizer,
 } from "@mediapipe/tasks-vision";
-import { drawConnectors, drawLandmarks, lerp } from "@mediapipe/drawing_utils";
 import { TetrisApi } from "./TetrisWrapper";
 
 function useHands(
@@ -32,8 +31,8 @@ function useHands(
         {
           baseOptions: {
             modelAssetPath:
-              "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
-            // "https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task",
+              // "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+              "https://storage.googleapis.com/mediapipe-tasks/gesture_recognizer/gesture_recognizer.task",
             delegate: "GPU",
           },
           runningMode: "VIDEO",
@@ -48,6 +47,8 @@ function useHands(
         },
       });
       inputVideoRef.current.srcObject = stream;
+
+      const drawingUtils = new DrawingUtils(contextRef.current);
 
       const getGesture = () => {
         if (
@@ -64,11 +65,9 @@ function useHands(
           performance.now()
         );
 
-        let closedFist = false;
         if (result.gestures[0]) {
           for (const category of result.gestures[0]) {
             if (category.categoryName === "Closed_Fist") {
-              closedFist = true;
               tetris.current.moveDown();
             }
           }
@@ -87,15 +86,13 @@ function useHands(
             break;
           }
 
-          if (!closedFist) {
-            if (indexFingerLandmark) {
-              if (indexFingerLandmark.x < 0.3) {
-                tetris.current.moveRight(); // camera is flipped
-              } else if (indexFingerLandmark.x > 0.7) {
-                tetris.current.moveLeft(); // camera is flipped
-              } else if (indexFingerLandmark.y < 0.3) {
-                tetris.current.rotate();
-              }
+          if (indexFingerLandmark) {
+            if (indexFingerLandmark.x < 0.3) {
+              tetris.current.moveRight(); // camera is flipped
+            } else if (indexFingerLandmark.x > 0.7) {
+              tetris.current.moveLeft(); // camera is flipped
+            } else if (indexFingerLandmark.y < 0.3) {
+              tetris.current.rotate();
             }
           }
 
@@ -109,7 +106,6 @@ function useHands(
               canvasRef.current!.width,
               canvasRef.current!.height
             );
-            const drawingUtils = new DrawingUtils(contextRef.current!);
 
             canvasRef.current!.height = inputVideoRef.current.videoHeight;
             canvasRef.current!.width = inputVideoRef.current.videoWidth;
@@ -119,7 +115,7 @@ function useHands(
               GestureRecognizer.HAND_CONNECTIONS,
               {
                 color: isRightHand ? "#00FF00" : "#FF0000",
-                lineWidth: 5,
+                lineWidth: 2,
               }
             );
             drawingUtils.drawLandmarks(multiHandLandmarks, {
@@ -152,22 +148,7 @@ const HandsContainer = ({
   const inputVideoRef = useRef<HTMLVideoElement>(null!);
   const canvasRef = useRef<HTMLCanvasElement>(null!);
 
-  useHands(inputVideoRef, canvasRef, tetris);
-
-  // useEffect(() => {
-  //   // split the index finger into 10 parts
-  //   if (closedFist) {
-  //     tetris.current.moveDown();
-  //   } else if (indexFingerLandmark) {
-  //     if (indexFingerLandmark.x < 0.3) {
-  //       tetris.current.moveRight(); // camera is flipped
-  //     } else if (indexFingerLandmark.x > 0.7) {
-  //       tetris.current.moveLeft(); // camera is flipped
-  //     } else if (indexFingerLandmark.y < 0.3) {
-  //       tetris.current.rotate();
-  //     }
-  //   }
-  // }, [indexFingerLandmark, closedFist]);
+  const { loaded } = useHands(inputVideoRef, canvasRef, tetris);
 
   return (
     <div
@@ -185,35 +166,18 @@ const HandsContainer = ({
           transform: "scaleX(-1)",
         }}
       >
-        {/* {indexFingerLandmark && (
-          <div
-            style={{
-              position: "absolute",
-              top: indexFingerLandmark.y * 100 + "%",
-              left: indexFingerLandmark.x * 100 + "%",
-              width: "20px",
-              height: "20px",
-              background: "yellow",
-              outline: "2px solid black",
-              borderRadius: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
-          ></div>
-        )} */}
-        <video
-          // style={{ opacity: "0", position: "fixed" }}
-          autoPlay
-          playsInline
-          ref={inputVideoRef}
+        <video autoPlay playsInline ref={inputVideoRef} />
+        <canvas
+          ref={canvasRef}
+          style={{ position: "absolute", top: "0", left: "0" }}
         />
-        <canvas ref={canvasRef} />
       </div>
-      {/* {!loaded && (
+      {!loaded && (
         <div style={{}}>
           <div style={{}}></div>
           <div style={{}}>Loading</div>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
